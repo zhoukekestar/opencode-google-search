@@ -15,7 +15,8 @@ import type {
   GeminiAuthorization,
   GeminiTokenExchangeResult,
   PkcePair,
-  OAuthAuthDetails
+  OAuthAuthDetails,
+  RefreshTokenResult
 } from "./types.js";
 
 const CONFIG_DIR = join(homedir(), ".local/share/opencode");
@@ -96,7 +97,7 @@ export async function exchangeCode(
   };
 }
 
-export async function refreshAccessToken(refresh: string): Promise<string | null> {
+export async function refreshAccessToken(refresh: string): Promise<RefreshTokenResult | null> {
   try {
     const { refreshToken } = parseRefreshParts(refresh);
 
@@ -118,12 +119,8 @@ export async function refreshAccessToken(refresh: string): Promise<string | null
         return null;
     }
 
-    const data = (await response.json()) as {
-      access_token: string;
-      expires_in: number;
-      refresh_token?: string;
-    };
-    return data.access_token;
+    const data = (await response.json()) as RefreshTokenResult
+    return data;
   } catch (error) {
     console.error("Error refreshing token:", error);
     return null;
@@ -138,18 +135,9 @@ export async function saveAuth(auth: any) {
 export async function loadAuth(): Promise<any> {
   try {
     let data = await readFile(AUTH_FILE, "utf-8");
-    let auth = JSON.parse(data).google;
-
-    // if (auth.expires && auth.expires < Date.now()) {
-    //   data = await readFile(join(homedir(), '.gemini/oauth_creds.json'), 'utf-8')
-    //   auth = JSON.parse(data);
-
-    //   auth.access = auth.access_token;
-    //   if (auth.expires && auth.expires < Date.now()) {
-    //     throw new Error('Please login with gemini')
-    //   }
-    // }
-
+    // 不要添加 .google 的数据，因为后续要刷新 token 的话，需要会写数据
+    // 需要尽可能多的原样返回数据
+    let auth = JSON.parse(data);
     return auth;
   } catch {
     return null;

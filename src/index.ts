@@ -15,7 +15,7 @@ async function getPendingAuth() {
 }
 
 // let auth = null;
-export const GoogleSearchPlugin: Plugin = async () => {
+export const GoogleSearchPlugin: Plugin = async (pctx) => {
   const z = tool.schema;
 
   return {
@@ -34,18 +34,21 @@ export const GoogleSearchPlugin: Plugin = async () => {
         },
         execute: async ({ query }) => {
           let auth = await loadAuth();
-            
-          if (!auth || !auth.access) {
+          
+          if (!auth.google || !auth.google.access) {
             throw new Error("Authentication required. Please run the 'google_login' tool to authenticate.");
           }
     
           // Check if token is expired
-          if (accessTokenExpired(auth)) {
-            console.log("Access token expired, refreshing...");
-            const newAccessToken = await refreshAccessToken(auth.refresh);
-            if (newAccessToken) {
-              auth.access = newAccessToken;
-              auth.expires = Date.now() + 3600 * 1000; // Assuming 1 hour validity
+          if (accessTokenExpired(auth.google)) {
+            
+            const refreshTokenResult = await refreshAccessToken(auth.google.refresh);
+            if (refreshTokenResult?.access_token) {
+              auth.google.access = refreshTokenResult.access_token;
+              auth.google.expires = Date.now() + refreshTokenResult.expires_in * 1000; // Assuming 1 hour validity
+              if (refreshTokenResult.refresh_token) {
+                auth.google.refresh = refreshTokenResult.refresh_token;
+              }
               await saveAuth(auth);
             } else {
               throw new Error("Authentication expired and refresh failed. Please run the 'google_login' tool to re-authenticate.");
@@ -53,7 +56,7 @@ export const GoogleSearchPlugin: Plugin = async () => {
           }
     
           try {
-            const response = await searchWithGemini(query, auth.access, "cloud-run-proxy-449105");
+            const response = await searchWithGemini(query, auth.google.access, "cloud-run-proxy-449105");
             const formatted = formatResponse(response, query);
             return formatted;
           } catch (error: any) {
