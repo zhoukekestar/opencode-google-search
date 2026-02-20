@@ -1,0 +1,27 @@
+{
+  "name": "opencode-google-search",
+  "version": "1.0.0",
+  "description": "Opencode plugin for Google Search using Gemini Grounding",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "google-search",
+    "gemini"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@openauthjs/openauth": "^0.4.3",
+    "@opencode-ai/plugin": "^1.1.48",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3"
+  }
+}
