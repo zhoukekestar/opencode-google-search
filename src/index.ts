@@ -1,6 +1,6 @@
 import { type Plugin } from "@opencode-ai/plugin";
 import { tool } from "@opencode-ai/plugin/tool";
-import { authorizeGemini, exchangeCode, loadAuth, saveAuth, refreshAccessToken } from "./auth.js";
+import { authorizeGemini, exchangeCode, loadAuth, saveAuth, refreshAccessToken, accessTokenExpired } from "./auth.js";
 
 import { searchWithGemini } from "./client.js";
 import { formatResponse } from "./formatter.js";
@@ -40,7 +40,7 @@ export const GoogleSearchPlugin: Plugin = async () => {
           }
     
           // Check if token is expired
-          if (auth.expires && auth.expires < Date.now()) {
+          if (accessTokenExpired(auth)) {
             console.log("Access token expired, refreshing...");
             const newAccessToken = await refreshAccessToken(auth.refresh);
             if (newAccessToken) {

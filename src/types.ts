@@ -2,6 +2,12 @@ export interface PkcePair {
   challenge: string;
   verifier: string;
 }
+export interface OAuthAuthDetails {
+  type: "oauth";
+  refresh: string;
+  access?: string;
+  expires?: number;
+}
 
 export interface GeminiAuthorization {
   url: string;

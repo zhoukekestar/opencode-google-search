@@ -15,10 +15,30 @@ import type {
   GeminiAuthorization,
   GeminiTokenExchangeResult,
   PkcePair,
+  OAuthAuthDetails
 } from "./types.js";
 
 const CONFIG_DIR = join(homedir(), ".local/share/opencode");
 const AUTH_FILE = join(CONFIG_DIR, "auth.json");
+const ACCESS_TOKEN_EXPIRY_BUFFER_MS = 60 * 1000;
+
+export interface RefreshParts {
+  refreshToken: string;
+  projectId?: string;
+  managedProjectId?: string;
+}
+
+/**
+ * Splits a packed refresh string into its constituent refresh token and project IDs.
+ */
+export function parseRefreshParts(refresh: string): RefreshParts {
+  const [refreshToken = "", projectId = "", managedProjectId = ""] = (refresh ?? "").split("|");
+  return {
+    refreshToken,
+    projectId: projectId || undefined,
+    managedProjectId: managedProjectId || undefined,
+  };
+}
 
 export async function authorizeGemini(): Promise<GeminiAuthorization> {
   const pkce = (await generatePKCE()) as PkcePair;
@@ -76,8 +96,10 @@ export async function exchangeCode(
   };
 }
 
-export async function refreshAccessToken(refreshToken: string): Promise<string | null> {
+export async function refreshAccessToken(refresh: string): Promise<string | null> {
   try {
+    const { refreshToken } = parseRefreshParts(refresh);
+
     const response = await proxyFetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: {
@@ -96,7 +118,11 @@ export async function refreshAccessToken(refreshToken: string): Promise<string |
         return null;
     }
 
-    const data = (await response.json()) as any;
+    const data = (await response.json()) as {
+      access_token: string;
+      expires_in: number;
+      refresh_token?: string;
+    };
     return data.access_token;
   } catch (error) {
     console.error("Error refreshing token:", error);
@@ -111,9 +137,31 @@ export async function saveAuth(auth: any) {
 
 export async function loadAuth(): Promise<any> {
   try {
-    const data = await readFile(AUTH_FILE, "utf-8");
-    return JSON.parse(data).google;
+    let data = await readFile(AUTH_FILE, "utf-8");
+    let auth = JSON.parse(data).google;
+
+    // if (auth.expires && auth.expires < Date.now()) {
+    //   data = await readFile(join(homedir(), '.gemini/oauth_creds.json'), 'utf-8')
+    //   auth = JSON.parse(data);
+
+    //   auth.access = auth.access_token;
+    //   if (auth.expires && auth.expires < Date.now()) {
+    //     throw new Error('Please login with gemini')
+    //   }
+    // }
+
+    return auth;
   } catch {
     return null;
   }
+}
+
+/**
+ * Determines whether an access token is expired or missing, with buffer for clock skew.
+ */
+export function accessTokenExpired(auth: OAuthAuthDetails): boolean {
+  if (!auth.access || typeof auth.expires !== "number") {
+    return true;
+  }
+  return auth.expires <= Date.now() + ACCESS_TOKEN_EXPIRY_BUFFER_MS;
 }
