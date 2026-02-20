@@ -25,6 +25,15 @@ export const GoogleSearchPlugin: Plugin = async (pctx) => {
     //   }
     // },
     tool: {
+      // webfetch: tool({
+      //   description: "Search Google. Use this for general knowledge, news, and current events.",
+      //   args: {
+      //     query: z.string().describe("The search query"),
+      //   },
+      //   execute: async ({ query }) => {
+      //     return '# webfetch result: hello world';
+      //   }
+      // }),
 
       // 使用 google_search 搜索今天新闻
       google_search: tool({
