@@ -4,8 +4,7 @@
   "description": "Opencode plugin for Google Search using Gemini Grounding",
   "module": "src/index.ts",
   "type": "module",
-  "scripts": {
-  },
+  "scripts": {},
   "keywords": [
     "opencode",
     "plugin",
@@ -17,6 +16,7 @@
   "dependencies": {
     "@openauthjs/openauth": "^0.4.3",
     "@opencode-ai/plugin": "^1.1.48",
+    "@opencode-ai/sdk": "^1.2.10",
     "zod": "^3.24.2"
   },
   "devDependencies": {

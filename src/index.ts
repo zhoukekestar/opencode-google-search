@@ -1,9 +1,13 @@
-import { type Plugin } from "@opencode-ai/plugin";
+import { type Plugin, type PluginInput } from "@opencode-ai/plugin";
 import { tool } from "@opencode-ai/plugin/tool";
+// import { type OpencodeClient } from '@opencode-ai/sdk'
+
 import { authorizeGemini, exchangeCode, loadAuth, saveAuth, refreshAccessToken, accessTokenExpired } from "./auth.js";
 
 import { searchWithGemini } from "./client.js";
 import { formatResponse } from "./formatter.js";
+import { client } from "@openauthjs/openauth/storage/aws";
+import { id } from "zod/v4/locales";
 
 // Helper to handle authentication flow state
 async function getPendingAuth() {
@@ -43,6 +47,12 @@ export const GoogleSearchPlugin: Plugin = async (pctx) => {
         },
         execute: async ({ query }) => {
           let auth = await loadAuth();
+
+          // list all tools, https://github.com/anomalyco/opencode/issues/1142
+          //   const client: PluginInput['client'] = pctx.client;
+          // const ids = await client.tool.ids();
+          // console.log('ids', ids);
+          // curl "http://localhost:$(lsof -i -sTCP:LISTEN | grep -E "^opencode" | grep -oE ':[0-9]+' | tr -d ':')/experimental/tool/ids"
           
           if (!auth.google || !auth.google.access) {
             throw new Error("Authentication required. Please run the 'google_login' tool to authenticate.");
