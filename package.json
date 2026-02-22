@@ -1,5 +1,5 @@
 {
-  "name": "opencode-google-search",
+  "name": "opencode-google-search-proxy",
   "version": "1.0.0",
   "description": "Opencode plugin for Google Search using Gemini Grounding",
   "module": "src/index.ts",
